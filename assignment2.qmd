@@ -71,6 +71,14 @@ Based on the scatter plot above there does not appear to be a strong linear rela
 
 Repeat the above for keywords related to covid. Make sure you use multiple keywords like we did above. Try several different combinations and think carefully about words that might make sense within this context.
 
+```{r}
+res <- gtrends(c("covid", "vaccine"), 
+               geo = "US-IL", 
+               time = "2020-01-01 2020-12-31", 
+               low_search_volume = TRUE)
+plot(res)
+```
+
 ## Google Trends + ACS
 
 Now lets add another data set. The `censusapi` package provides a nice R interface for communicating with this API. However, before running queries we need an access key. This (easy) process can be completed here:
