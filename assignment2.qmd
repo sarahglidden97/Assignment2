@@ -150,7 +150,7 @@ Now lets add another data set. The `censusapi` package provides a nice R interfa
 Once you have an access key, save it as a text file, then read this key in the `cs_key` object. We will use this object in all following API queries. Note that I called my text file `census-key.txt` – yours might be different!
 
 ```{r}
-cs_key <- read_file("census-key.txt")
+sg_key <- "50431d8654d1cdfd9650a84be17dba966db548eb"
 ```
 
 In the following, we request basic socio-demographic information (population, median age, median household income, income per capita) for cities and villages in the state of Illinois. Documentation for the 5-year ACS API can be found here: <https://www.census.gov/data/developers/data-sets/acs-5year.html>. The information about the variables used here can be found here: <https://api.census.gov/data/2022/acs/acs5/variables.html>.
@@ -165,7 +165,7 @@ acs_il <- getCensus(name = "acs/acs5",
                              "B19301_001E"), 
                     region = "place:*", 
                     regionin = "state:17",
-                    key = cs_key)
+                    key = sg_key)
 head(acs_il)
 ```
 
