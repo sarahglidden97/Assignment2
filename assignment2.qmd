@@ -72,12 +72,74 @@ Based on the scatter plot above there does not appear to be a strong linear rela
 Repeat the above for keywords related to covid. Make sure you use multiple keywords like we did above. Try several different combinations and think carefully about words that might make sense within this context.
 
 ```{r}
-res <- gtrends(c("covid", "vaccine"), 
-               geo = "US-IL", 
-               time = "2020-01-01 2020-12-31", 
-               low_search_volume = TRUE)
-plot(res)
+# trying different combinations of keywords
+covid <- gtrends(c("covid", "covid vaccine"), 
+                 geo = "US-IL", 
+                 time = "2020-01-01 2020-12-31", 
+                 low_search_volume = TRUE)
+plot(covid)
+
+covid2 <- gtrends(c("covid", "testing"), 
+                 geo = "US-IL", 
+                 time = "2020-01-01 2020-12-31", 
+                 low_search_volume = TRUE)
+plot(covid2)
+
+covid3 <- gtrends(c("covid", "mask"), 
+                 geo = "US-IL", 
+                 time = "2020-01-01 2020-12-31", 
+                 low_search_volume = TRUE)
+plot(covid3)
+
+covid4 <- gtrends(c("covid", "symptoms"), 
+                 geo = "US-IL", 
+                 time = "2020-01-01 2020-12-31", 
+                 low_search_volume = TRUE)
+plot(covid4)
 ```
+
+We will be examining the search combination of "covid" and "mask."
+
+```{r}
+# find the mean, median and variance of the search hits for the keywords
+covid_mask_time <- as_tibble(covid3$interest_over_time)
+
+covid_mask_time <- covid_mask_time %>%
+  mutate(hits = ifelse(hits == "<1", 1, hits))
+
+covid_mask_time$hits <- as.numeric(covid_mask_time$hits)
+
+covid_mask_time %>%
+  group_by(keyword) %>%
+  summarise(mean_hits = mean(hits),
+            median_hits = median(hits),
+            var_hits = var(hits))
+
+# Which cities (locations) have the highest search frequency for mask?
+covid_mask_cities <- as_tibble(covid3$interest_by_dma)
+
+covid_mask_cities %>%
+  filter(keyword == "mask") %>%
+  arrange(desc(hits))
+
+# Is there a relationship between the search intensities between the two keywords we used?
+# make a wide data frame to separate crime and loans
+covid_mask_cities <- covid_mask_cities %>%
+  mutate(hits = ifelse(hits == "<1", 1, hits))
+
+covid_mask_cities$hits <- as.numeric(covid_mask_cities$hits)
+
+covid_mask_cities_wide <- spread(covid_mask_cities, key = keyword, value = hits)
+
+ggplot(covid_mask_cities_wide, aes(x = covid, y = mask)) +
+  geom_point()
+```
+
+The mean average number of hits for "covid" was 45.47 with a median of 51 and a variance of 669.37. The mean average number of hits for "mask" was 10.30 with a median of 8 and a variance of 40.37.
+
+Davenport IA-Rock Island-Moline IL and Champaign & Springfield-Decatur IL had the highest numbers of searches for "mask" with 100 each. Chicago IL had 99 searches and Evansville IN and Rockford IL each had 97.
+
+There does appear to be a slight linear relationship between searching "covid" and "mask." Cities that have higher numbers of searches for "covid" are also searching "mask" in higher numbers overall.
 
 ## Google Trends + ACS
 
