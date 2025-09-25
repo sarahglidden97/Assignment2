@@ -32,7 +32,6 @@ res <- gtrends(c("crime", "loans"),
                geo = "US-IL", 
                time = "2020-01-01 2020-12-31", 
                low_search_volume = TRUE)
-plot(res)
 
 names(res)
 glimpse(res)
@@ -84,13 +83,23 @@ head (top_loans, 10)
 
     -   The time series plot above indicates that interest in loans surged sharply and peaked around April 2020, during the early months of the COVID-19 pandemic. This was likely due to searches related to financial support, unemployment, and loans. Conversely, crime-related searches surged around June 2020, a time characterized by increased media coverage of crime and protests. Afterwards, searches declined, with moderate activity observed. Loan searches were generally higher than crime searches throughout most of 2020, except in June when crime search spiked.
 
-    ---------------------------------------------------------------------------------------
+    ------------------------------------------------------------------------
 
 Repeat the above for keywords related to covid. Make sure you use multiple keywords like we did above. Try several different combinations and think carefully about words that might make sense within this context.
 
 ```{r}
-covid <- gtrends(c("covid-19", "coronavirus", 
+covid <- gtrends(c("covid", "mask", 
                    "pandemic", "vaccine"), 
+               geo = "US-IL", 
+               time = "2020-01-01 2020-12-31", 
+               low_search_volume = TRUE)
+
+plot(covid)
+```
+
+```{r}
+covid <- gtrends(c("covid", 
+                   "vaccine"), 
                geo = "US-IL", 
                time = "2020-01-01 2020-12-31", 
                low_search_volume = TRUE)
@@ -179,3 +188,104 @@ Answer the following questions with the "crime" and "loans" Google trends data a
 -   Is there a relationship between the median household income and the search popularity of the Google trends terms? Describe the relationship and use a scatterplot with `qplot()`.
 
 Repeat the above steps using the covid data and the ACS data.
+
+## Repeating the same steps for COVID keywords
+
+```{r}
+covid <- gtrends(c("covid", "mask", 
+                   "pandemic", "vaccine"), 
+               geo = "US-IL", 
+               time = "2020-01-01 2020-12-31", 
+               low_search_volume = TRUE)
+
+plot(covid)
+```
+
+```{r}
+# Pull covid keywords
+covid_res <- gtrends(
+  keyword = c("covid", "vaccine"),
+  geo = "US-IL",
+  time = "2020-01-01 2020-12-31",
+  low_search_volume = TRUE
+)
+
+plot(covid_res)
+
+# prepare by city
+if(!is.null(covid_res$interest_by_city) && nrow(covid_res$interest_by_city) > 0) {
+  covid_by_city <- covid_res$interest_by_city %>%
+    mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+    mutate(hits = as.numeric(hits)) %>%
+    group_by(location, keyword) %>%
+    summarise(hits = mean(hits, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(names_from = keyword, values_from = hits, values_fill = NA)
+} else {
+  stop("No city-level COVID data returned.")
+}
+```
+
+```{r}
+# join with ACS
+covid_joined <- inner_join(covid_by_city, acs_small, by = "location")
+glimpse(covid_joined)
+nrow(covid_joined)
+
+```
+
+```{r}
+# summarize by income group
+avg_hh_covid <- mean(covid_joined$median_household_income, na.rm = TRUE)
+
+covid_summary <- covid_joined %>%
+  mutate(income_group = ifelse(median_household_income > avg_hh_covid, "above", "below")) %>%
+  group_by(income_group) %>%
+  summarise(across(c(covid, vaccine),
+                   list(mean = ~mean(.x, na.rm = TRUE),
+                        median = ~median(.x, na.rm = TRUE),
+                        var = ~var(.x, na.rm = TRUE)),
+                   .names = "{.col}_{.fn}"),
+            .groups = "drop")
+
+covid_summary
+
+
+```
+
+```{r}
+# COVID vs Vaccine searches
+ggplot(covid_joined, aes(x = covid, y = vaccine)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "COVID vs Vaccine search intensity by city",
+    x = "COVID search intensity",
+    y = "Vaccine search intensity"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Income vs Covid searches (by median hh income)
+covid_plot_df <- covid_joined %>% filter(!is.na(median_household_income) & !is.na(covid))
+ggplot(covid_plot_df, aes(x = median_household_income, y = covid)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Income vs COVID search intensity") +
+  theme_minimal()
+
+```
+
+```{r}
+
+# Income vs Vaccine searches (by median hh income)
+ggplot(covid_joined, aes(x = median_household_income, y = vaccine)) +
+  geom_point(alpha = 0.6, color = "purple") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Income vs Vaccine search intensity",
+    x = "Median household income",
+    y = "Vaccine search intensity"
+  ) +
+  theme_minimal()
+```
