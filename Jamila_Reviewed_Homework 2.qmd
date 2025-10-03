@@ -22,6 +22,7 @@ library(readr)
 library(stringr) 
 library(ggplot2)
 library(knitr)
+library(striprtf)
 ```
 
 In this assignment, you will pull from APIs to get data from various data sources and use your data wrangling skills to use them all together. You should turn in a report in PDF or HTML format that addresses all of the questions in this assignment, and describes the data that you pulled and analyzed. You do not need to include full introduction and conclusion sections like a full report, but you should make sure to answer the questions in paragraph form, and include all relevant tables and graphics.
@@ -167,7 +168,7 @@ Now lets add another data set. The `censusapi` package provides a nice R interfa
 Once you have an access key, save it as a text file, then read this key in the `cs_key` object. We will use this object in all following API queries. Note that I called my text file `census-key.txt` – yours might be different!
 
 ```{r}
-cs_key <- read_file("census-key.txt")
+cs_key <- read_rtf("~/Desktop/SURV 727/sg_key.rtf")
 ```
 
 In the following, we request basic socio-demographic information (population, median age, median household income, income per capita) for cities and villages in the state of Illinois. Documentation for the 5-year ACS API can be found here: <https://www.census.gov/data/developers/data-sets/acs-5year.html>. The information about the variables used here can be found here: <https://api.census.gov/data/2022/acs/acs5/variables.html>.
@@ -185,7 +186,7 @@ acs_il <- getCensus(name = "acs/acs5",
                     key = cs_key)
 head(acs_il) # to view first few rows
 
-view(acs_il) # review entire data sets
+# view(acs_il) # review entire data sets
 ```
 
 Convert values that represent missings to NAs.
@@ -199,8 +200,7 @@ head(acs_il)
 Now, it might be useful to rename the socio-demographic variables (`B01001_001E` etc.) in our data set and assign more meaningful names.
 
 ```{r}
-acs_il <-
-  acs_il %>%
+acs_il <- acs_il %>%
   rename(pop = B01001_001E, 
          age = B06002_001E, 
          hh_income = B19013_001E, 
@@ -224,25 +224,23 @@ Answer the following questions with the "crime" and "loans" Google trends data a
 
 -   First, check how many cities don't appear in both data sets, i.e. cannot be matched. Then, create a new data set by joining the Google Trends and the ACS data. Keep only cities that appear in both data sets.
 
-    ```         
-    8 cities that do not appear in both data sets
-    ```
+8 cities that do not appear in both data sets
 
-    ```{r}
-    asc_crime_loans <- res$interest_by_city |> as_tibble() |> 
-      as_tibble() |> 
-      mutate(location = str_replace(location, "Saint\\s", "St. "), 
-             location = str_replace(location, "Sainte\\s", "Ste. "),
-             location = str_remove(location, "Fort ") ) |> 
-      # joining crime/loans google trends data with ACS
-      left_join(acs_il, relationship = "many-to-many")
+```{r}
+asc_crime_loans <- res$interest_by_city |> as_tibble() |> 
+  as_tibble() |> 
+  mutate(location = str_replace(location, "Saint\\s", "St. "), 
+         location = str_replace(location, "Sainte\\s", "Ste. "),
+         location = str_remove(location, "Fort ") ) |> 
+  # joining crime/loans google trends data with ACS
+  left_join(acs_il, relationship = "many-to-many")
 
-    # cities that do not appear in both data sets
-    asc_crime_loans |> 
-      filter(is.na(NAME)) |> 
-      select(location)  # unmatches between both data sets
-    count(asc_crime_loans) 
-    ```
+# cities that do not appear in both data sets
+asc_crime_loans |> 
+  filter(is.na(NAME)) |> 
+  select(location)  # unmatches between both data sets
+count(asc_crime_loans) 
+```
 
 -   Joining Google Trends and ACS data sets
 
@@ -258,28 +256,25 @@ Answer the following questions with the "crime" and "loans" Google trends data a
 
 -   Compute the mean of the search popularity for both keywords for cities that have an above average median household income and for those that have an below average median household income. When building your pipe, start with creating the grouping variable and then proceed with the remaining tasks. What conclusions might you draw from this?
 
-    **Income and Crime:** Cities with higher median household income have a lower mean search popularity (67.4) compared to cities with lower income (72.8) – indicating that as household income increases, interest in crime search popularity decreases, possibly due to safer neighborhoods.
+    **Income and Crime:** Cities with higher median household income have a slightly higher mean search popularity (66.5) compared to cities with lower income (66.1) – indicating that as household income increases, interest in crime search popularity increases. This could be due to higher income areas being more vigilant about crimes.
 
-    **Income and Loans:** Cities with higher median income have a slightly higher mean search popularity for loans (54.3) than cities with lower income (52.7) – an indication that higher-income cities have better access to loans or financial opportunities.
+    **Income and Loans:** Cities with higher median income have a slightly lower mean search popularity for loans (73.8) than cities with lower income (76.0) – an indication that higher-income cities have better access to loans or financial opportunities.
 
     ```{r}
-    stats_asc_crime_loans <- 
-      asc_crime_loans |> 
-      mutate(hh_income_median = 
-               ifelse(hh_income > mean(hh_income, na.rm=TRUE),
-                      "Higher", "Lower")) |> 
+    stats_asc_crime_loans <- asc_crime_loans |> 
+      mutate(hh_income_median = ifelse(hh_income > median(hh_income, na.rm=TRUE),
+                                       "Higher", "Lower")) |> 
       filter(!is.na(hh_income_median)) |> 
       group_by(hh_income_median, keyword) |> 
-      reframe(mean_hits = mean(hits, na.rm=TRUE)) |> 
+      summarise(mean_hits = mean(hits, na.rm=TRUE)) |> 
       pivot_wider(names_from = keyword, values_from = mean_hits)
 
     stats_asc_crime_loans
-
     ```
 
 -   Is there a relationship between the median household income and the search popularity of the Google trends terms? Describe the relationship and use a scatterplot with `qplot()`.
 
-    There seems to be linear relationships between median household income and the search popularity of crime and loans. Similar to the observation in the previous question, as median household income increases, crime searches seem to decrease. Conversely, as median household income increases, there appears to be an increase in loan searches.
+    There seems to be linear relationships between median household income and the search popularity of crime and loans. Similar to the observation in the previous question, as median household income increases, crime searches seem to increase. Conversely, as median household income increases, there appears to be a slight decrease in loan searches.
 
     -   Median household income and income_loans plot
 
@@ -306,20 +301,13 @@ Repeat the above steps using the covid data and the ACS data.
 
 ```{r}
 # Pull covid keywords
-covid_res <- gtrends(
-  keyword = c("covid", "vaccine"),
-  geo = "US-IL",
-  time = "2020-01-01 2020-12-31",
-  low_search_volume = TRUE
-)
-
-plot(covid_res)
+plot(covid_keywords)
 ```
 
-8 cities that do not appear in both data sets
+9 cities that do not appear in both data sets
 
 ```{r}
-asc_covid_vaccine <- covid_res$interest_by_city |> as_tibble() |> 
+asc_covid_vaccine <- covid_keywords$interest_by_city |> as_tibble() |> 
   as_tibble() |> 
   mutate(location = str_replace(location, "Saint\\s", "St. "), 
          location = str_replace(location, "Sainte\\s", "Ste. "),
@@ -340,7 +328,7 @@ count(asc_covid_vaccine )
 stats_asc_covid_vaccine <- 
   asc_covid_vaccine |> 
   mutate(hh_income_median = 
-           ifelse(hh_income > mean(hh_income, na.rm=TRUE),
+           ifelse(hh_income > median(hh_income, na.rm=TRUE),
                   "Higher", "Lower")) |> 
   filter(!is.na(hh_income_median)) |> 
   group_by(hh_income_median, keyword) |> 
@@ -349,6 +337,10 @@ stats_asc_covid_vaccine <-
 
 stats_asc_covid_vaccine
 ```
+
+**Income and Covid:** Cities with higher median household income have a slightly higher mean search popularity (64.9) compared to cities with lower income (64.7) – indicating that as household income increases, interest in covid search popularity increases. This could be due to higher education levels of people in wealthier cities feeling confident to research covid on their own time.
+
+**Income and Loans:** Cities with higher median income have a lower mean search popularity for vaccine (33.8) than cities with lower income (36.9) – an indication that higher-income cities have more remote workers, while in lower income cities workers may be required to be in person, and would have needed to search vaccine requirements so they could return to work.
 
 -   Median household income and covid_vaccine plot
 
@@ -362,3 +354,5 @@ ggplot(asc_covid_vaccine, aes(x = hh_income, y = hits, color = keyword)) +
   ) +
   theme_minimal()
 ```
+
+There appear to be slight positive linear trends with both covid and vaccine, where searches increase as income increases.
