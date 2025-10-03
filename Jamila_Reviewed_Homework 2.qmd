@@ -35,13 +35,15 @@ Our first data source is the Google Trends API. Suppose we are interested in the
 ```{r}
 res <- gtrends(c("crime", "loans"), 
                geo = "US-IL", 
-               time = "2020-01-01 2020-12-31", 
+               time = "2020-01-01 2021-12-31", 
                low_search_volume = TRUE)
 names(res)
 glimpse(res)
 ```
 
-Answer the following questions for the keywords "crime" and "loans". - Find the mean, median and variance of the search hits for the keywords.
+Answer the following questions for the keywords "crime" and "loans".
+
+-   Find the mean, median and variance of the search hits for the keywords.
 
 ```{r}
 stats <- res$interest_over_time %>%
@@ -74,7 +76,7 @@ head (top_loans, 10) # top 10 cities with the highest search frequency for "loan
 
 -   Is there a relationship between the search intensities between the two keywords we used?
 
-    - From the time series plot below, there does not seem to be an apparent association between "crime" and "loans" as they show different trends over time. It indicates that interest in loans surged sharply and peaked around April 2020, during the early months of the COVID-19 pandemic. This was likely due to searches related to financial support, unemployment, and loans. Conversely, crime-related searches surged around June 2020, a time characterized by increased media coverage of crime and protests. Afterwards, searches declined, with moderate activity observed. Loan searches were generally higher than crime searches throughout most of 2020, except in June when crime search spiked.
+    -   From the time series plot below, there does not seem to be an apparent association between "crime" and "loans" as they show different trends over time. It indicates that interest in loans surged sharply and peaked around April 2020, during the early months of the COVID-19 pandemic. This was likely due to searches related to financial support, unemployment, and loans. Conversely, crime-related searches surged around June 2020, a time characterized by increased media coverage of crime and protests. Afterwards, searches declined, with moderate activity observed. Loan searches were generally higher than crime searches throughout most of 2020, except in June when crime search spiked.
 
     ```{r}
     res <- gtrends(c("crime", "loans"), 
