@@ -57,8 +57,9 @@ stats <- res$interest_over_time %>%
 stats
 ```
 
--   Which cities (locations) have the highest search frequency for `loans`? Note that there might be multiple rows for each city if there were hits for both "crime" and "loans" in that city. It might be easier to answer this question if we had the search hits info for both search terms in two separate variables. That is, each row would represent a unique city.
--   The 10 cities below had the highest search frequency for "loans" during our query time period.
+The mean number of crime hits was 57.7, with a median of 57 and a variance of 63.8. The mean number of loans hits was 66.9 with a median of 66 and a variance of 68.1.
+
+-   Which cities (locations) have the highest search frequency for `loans`? Note that there might be multiple rows for each city if there were hits for both "crime" and "loans" in that city. It might be easier to answer this question if we had the search hits info for both search terms in two separate variables. That is, each row would represent a unique city. - The 10 cities below had the highest search frequency for "loans" during our query time period.
 
 ```{r}
 cities <- res$interest_by_city %>%
@@ -74,15 +75,13 @@ head (top_loans, 10) # top 10 cities with the highest search frequency for "loan
 
 ```
 
+Riverdale had the highest search frequency of loans with 100 hits, with Ford Heights and Rosemont have the second highest search frequency with 93 each.
+
 -   Is there a relationship between the search intensities between the two keywords we used?
 
     -   From the time series plot below, there does not seem to be an apparent association between "crime" and "loans" as they show different trends over time. It indicates that interest in loans surged sharply and peaked around April 2020, during the early months of the COVID-19 pandemic. This was likely due to searches related to financial support, unemployment, and loans. Conversely, crime-related searches surged around June 2020, a time characterized by increased media coverage of crime and protests. Afterwards, searches declined, with moderate activity observed. Loan searches were generally higher than crime searches throughout most of 2020, except in June when crime search spiked.
 
     ```{r}
-    res <- gtrends(c("crime", "loans"), 
-                   geo = "US-IL", 
-                   time = "2020-01-01 2020-12-31", 
-                   low_search_volume = TRUE)
     plot(res)
     ```
 
@@ -106,14 +105,13 @@ plot(covid)
 
 ```{r}
 covid_keywords <- gtrends(c("covid", 
-                   "vaccine"), # two keyword of relevance picked
-               geo = "US-IL", 
-               time = "2020-01-01 2020-12-31", 
-               low_search_volume = TRUE)
+                            "vaccine"), # two keyword of relevance picked
+                          geo = "US-IL", 
+                          time = "2020-01-01 2020-12-31", 
+                          low_search_volume = TRUE)
 
 names(covid_keywords)
 glimpse(covid_keywords)
-
 ```
 
 Answer the following questions for the keywords "covid" and "vaccine".
@@ -123,6 +121,8 @@ Answer the following questions for the keywords "covid" and "vaccine".
 ```{r}
 stats <- covid_keywords$interest_over_time %>%
   group_by(keyword) %>%
+  mutate(hits = ifelse(hits == "<1", .5, hits),
+         hits = as.numeric(hits)) %>%
   summarise(
     mean_hits   = mean(hits, na.rm = TRUE),
     median_hits = median(hits, na.rm = TRUE),
@@ -131,6 +131,8 @@ stats <- covid_keywords$interest_over_time %>%
 
 stats
 ```
+
+The mean number of covid hits was 46.0 with a median of 50 and a variance of 683.7. The mean number of vaccine hits was 3.8 with a median of 3 and a variance of 12.0.
 
 -   Which cities (locations) have the highest search frequency for **covid**? Note that there might be multiple rows for each city if there were hits for both "crime" and "loans" in that city. It might be easier to answer this question if we had the search hits info for both search terms in two separate variables. That is, each row would represent a unique city.
     -   The 10 cities below had the highest search frequency for "covid" during our query time period.
@@ -148,17 +150,13 @@ top_covid <- cities_covid %>%
 head (top_covid, 10)
 ```
 
+Wheeler had the highest search frequency of covid with 100 hits, with Evergreen Park and Beckemeyer have the second highest search frequency with 81 each.
+
 -   Is there a relationship between the search intensities between the two keywords we used?
 
     -   Again, from the time series plot below, there does not seem to be an apparent association between "covid" and "vaccine" as they show different trends over time. It looks like "covid" searches surged the most and sharply twice - the outbreak in spring 2020 (around February/March) and again towards the end of 2020 (November/December) which might be attributable to the onset of vaccine approvals and distribution.
 
     ```{r}
-    covid_keywords <- gtrends(c("covid", 
-                       "vaccine"), # two keyword of relevance picked
-                   geo = "US-IL", 
-                   time = "2020-01-01 2020-12-31", 
-                   low_search_volume = TRUE)
-
     plot(covid_keywords)
     ```
 
@@ -188,8 +186,6 @@ acs_il <- getCensus(name = "acs/acs5",
 head(acs_il) # to view first few rows
 
 view(acs_il) # review entire data sets
-
-
 ```
 
 Convert values that represent missings to NAs.
@@ -246,7 +242,6 @@ Answer the following questions with the "crime" and "loans" Google trends data a
       filter(is.na(NAME)) |> 
       select(location)  # unmatches between both data sets
     count(asc_crime_loans) 
-
     ```
 
 -   Joining Google Trends and ACS data sets
