@@ -258,7 +258,7 @@ count(asc_crime_loans)
 
     **Income and Crime:** Cities with higher median household income have a slightly higher mean search popularity (66.5) compared to cities with lower income (66.1) – indicating that as household income increases, interest in crime search popularity increases. This could be due to higher income areas being more vigilant about crimes.
 
-    **Income and Loans:** Cities with higher median income have a slightly lower mean search popularity for loans (73.8) than cities with lower income (76.0) – an indication that higher-income cities have better access to loans or financial opportunities.
+    **Income and Loans:** Cities with higher median income have a slightly lower mean search popularity for loans (66.1) than cities with lower income (70.2) – an indication that higher-income cities have better access to loans or financial opportunities.
 
     ```{r}
     stats_asc_crime_loans <- asc_crime_loans |> 
@@ -279,10 +279,6 @@ count(asc_crime_loans)
     -   Median household income and income_loans plot
 
     ```{r}
-    asc_crime_loans |> 
-      ggplot(aes(x=hh_income, y=hits, color=keyword)) +
-      geom_point() 
-
     ggplot(asc_crime_loans, aes(x = hh_income, y = hits, color = keyword)) +
       geom_point(alpha = 0.6) +
       labs(
@@ -340,7 +336,7 @@ stats_asc_covid_vaccine
 
 **Income and Covid:** Cities with higher median household income have a slightly higher mean search popularity (64.9) compared to cities with lower income (64.7) – indicating that as household income increases, interest in covid search popularity increases. This could be due to higher education levels of people in wealthier cities feeling confident to research covid on their own time.
 
-**Income and Loans:** Cities with higher median income have a lower mean search popularity for vaccine (33.8) than cities with lower income (36.9) – an indication that higher-income cities have more remote workers, while in lower income cities workers may be required to be in person, and would have needed to search vaccine requirements so they could return to work.
+**Income and Vaccine:** Cities with higher median income have a lower mean search popularity for vaccine (33.7) than cities with lower income (36.4) – an indication that higher-income cities have more remote workers, while in lower income cities workers may be required to be in person, and would have needed to search vaccine requirements so they could return to work.
 
 -   Median household income and covid_vaccine plot
 
