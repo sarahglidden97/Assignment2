@@ -262,7 +262,7 @@ count(asc_crime_loans)
 
     ```{r}
     stats_asc_crime_loans <- asc_crime_loans |> 
-      mutate(hh_income_median = ifelse(hh_income > median(hh_income, na.rm=TRUE),
+      mutate(hh_income_median = ifelse(hh_income > mean(hh_income, na.rm=TRUE),
                                        "Higher", "Lower")) |> 
       filter(!is.na(hh_income_median)) |> 
       group_by(hh_income_median, keyword) |> 
@@ -324,7 +324,7 @@ count(asc_covid_vaccine )
 stats_asc_covid_vaccine <- 
   asc_covid_vaccine |> 
   mutate(hh_income_median = 
-           ifelse(hh_income > median(hh_income, na.rm=TRUE),
+           ifelse(hh_income > mean(hh_income, na.rm=TRUE),
                   "Higher", "Lower")) |> 
   filter(!is.na(hh_income_median)) |> 
   group_by(hh_income_median, keyword) |> 
